@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Hook Analyzer Prompt — Glitchy</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #07030F;
+    --surface: #0F0720;
+    --border: #2A1560;
+    --purple: #A78BFA;
+    --gold: #FBBF24;
+    --white: #F5F0FF;
+    --muted: #7C6FA0;
+    --glow-purple: rgba(167,139,250,0.18);
+    --glow-gold: rgba(251,191,36,0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    padding: 40px 20px 80px;
+  }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.6;
+  }
+  .container { max-width: 860px; margin: 0 auto; position: relative; z-index: 1; }
+  .header { text-align: center; margin-bottom: 48px; }
+  .badge {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--gold) 0%, #F59E0B 100%);
+    color: #07030F;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 100px;
+    margin-bottom: 20px;
+  }
+  h1 { font-family: 'Syne', sans-serif; font-size: clamp(28px, 5vw, 46px); font-weight: 800; line-height: 1.1; color: var(--white); margin-bottom: 12px; }
+  h1 span { color: var(--purple); }
+  .subtitle { color: var(--muted); font-size: 15px; max-width: 520px; margin: 0 auto; line-height: 1.6; }
+  .prompt-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 28px; box-shadow: 0 0 40px rgba(167,139,250,0.06); }
+  .prompt-card-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid var(--border); background: rgba(167,139,250,0.04); }
+  .prompt-label { display: flex; align-items: center; gap: 10px; }
+  .prompt-num { width: 26px; height: 26px; border-radius: 6px; background: var(--purple); color: #07030F; font-family: 'Syne', sans-serif; font-weight: 800; font-size: 13px; display: flex; align-items: center; justify-content: center; }
+  .prompt-num.gold { background: var(--gold); }
+  .prompt-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; color: var(--white); }
+  .prompt-title small { font-weight: 400; color: var(--muted); font-family: 'Inter', sans-serif; font-size: 12px; margin-left: 8px; }
+  .copy-btn { background: transparent; border: 1px solid var(--border); color: var(--purple); font-family: 'DM Mono', monospace; font-size: 12px; padding: 6px 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s; letter-spacing: 0.04em; }
+  .copy-btn:hover { background: var(--glow-purple); border-color: var(--purple); }
+  .copy-btn.copied { color: var(--gold); border-color: var(--gold); background: var(--glow-gold); }
+  .prompt-body { padding: 28px 28px 32px; font-family: 'DM Mono', monospace; font-size: 13.5px; line-height: 1.85; color: #D4C8F5; white-space: pre-wrap; word-break: break-word; }
+  .c { color: var(--muted); font-style: italic; }
+  .s { color: var(--gold); font-weight: 500; }
+  .h { color: var(--purple); font-weight: 500; }
+  .divider { display: flex; align-items: center; gap: 16px; margin: 36px 0; color: var(--muted); font-size: 12px; font-family: 'DM Mono', monospace; letter-spacing: 0.1em; }
+  .divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .tips { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-top: 40px; }
+  .tip { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px; }
+  .tip-icon { font-size: 20px; margin-bottom: 10px; }
+  .tip-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 13px; color: var(--purple); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .tip-text { font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .footer { text-align: center; margin-top: 60px; color: var(--muted); font-size: 12px; font-family: 'DM Mono', monospace; }
+  .footer span { color: var(--purple); }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="badge">⚡ Glitchy Community Resource</div>
+    <h1>The <span>Hook Analyzer</span><br/>& Variant Builder</h1>
+    <p class="subtitle">Two prompts. Feed them videos. Walk away with scroll-stopping hooks and story-driven angles built for affiliate marketing.</p>
+  </div>
+
+  <div class="prompt-card">
+    <div class="prompt-card-header">
+      <div class="prompt-label">
+        <div class="prompt-num">1</div>
+        <div class="prompt-title">Hook Analyzer + Variant Generator <small>— Claude, ChatGPT-4o, or Gemini with video</small></div>
+      </div>
+      <button class="copy-btn" onclick="copyPrompt('p1', this)">Copy</button>
+    </div>
+    <div class="prompt-body" id="p1"><span class="c"># ━━━ ROLE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+You are an elite performance creative strategist who specializes in short-form video analysis for affiliate and performance marketing. You have deep expertise in scroll psychology, pattern interrupts, and what makes organic content convert.
+
+<span class="c"># ━━━ TASK ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+I am feeding you one or more TikTok or Instagram Reels videos. Your job is to reverse-engineer what makes them work and give me everything I need to recreate winning versions for my own affiliate marketing.
+
+<span class="c"># ━━━ STEP 1 — DEEP ANALYSIS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="s">For each video, break down:</span>
+
+<span class="h">HOOK ANATOMY (first 3 seconds)</span>
+- What exact words or phrase opens the video?
+- What hook TYPE is this? (curiosity gap / bold claim / identity trigger / shock / relatability / problem-first / social proof / fear / transformation teaser)
+- What EMOTION does it trigger instantly?
+- Is the hook visual, verbal, or both — and how do they work together?
+- Why would a thumb stop scrolling here?
+
+<span class="h">CONTENT STRUCTURE</span>
+- What is the overall format? (talking head / POV / list / day-in-life / reaction / demo / before-after / story arc)
+- What is the narrative spine — how does it flow from open → middle → close?
+- Where is the offer or CTA placed and HOW is it introduced? (hard sell / soft mention / natural embed)
+- What trust signals or credibility cues are used?
+
+<span class="h">AUDIENCE PSYCHOLOGY</span>
+- Who is the EXACT target viewer? (be specific — not just "millennials," describe their mindset and pain point)
+- What desire, fear, or identity is being activated?
+- What belief does the viewer hold going in that this video speaks to?
+
+<span class="h">PERFORMANCE SIGNALS</span>
+- What elements are likely driving watch time / replays?
+- What makes this feel organic vs. ad-like?
+- What is the single strongest asset of this video?
+
+<span class="c"># ━━━ STEP 2 — HOOK VARIANTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="s">Now generate 5 ORIGINAL hook variants I can use myself.</span>
+
+Rules:
+- Do NOT copy the original hook — create fresh angles inspired by the same psychology
+- Each variant must use a DIFFERENT hook type from the list above
+- Write each as the literal first line I would say or show on screen
+- After each hook, write 1 sentence explaining the psychological trigger it uses
+- Flag which 1–2 you think are the highest-converting and why
+
+Format:
+<span class="h">VARIANT 1 [Hook Type]:</span> "..."
+→ Why it works: ...
+
+<span class="h">VARIANT 2 [Hook Type]:</span> "..."
+→ Why it works: ...
+
+(repeat x5)
+
+<span class="h">⭐ TOP PICK:</span> Variant # — because ...
+
+<span class="c"># ━━━ STEP 3 — RECREATION BRIEF ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="s">Give me a "shoot this today" brief with:</span>
+
+- <span class="h">Setting:</span> Where to film (bedroom / outdoors / phone screenshot / etc.)
+- <span class="h">Delivery style:</span> Tone and energy (calm confidence / hype / whisper / casual / authoritative)
+- <span class="h">Visual direction:</span> What to show on screen or overlay
+- <span class="h">CTA:</span> Exact call-to-action wording and placement recommendation
+- <span class="h">One thing to AVOID</span> that would kill the organic feel
+
+<span class="c"># ━━━ INPUT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+Here is / are the video(s): [PASTE LINK OR UPLOAD VIDEO]
+My niche / offer is: [DESCRIBE YOUR OFFER OR AFFILIATE PRODUCT]
+My target audience is: [DESCRIBE WHO YOU ARE TARGETING]</div>
+  </div>
+
+  <div class="divider">ADD-ON PROMPT</div>
+
+  <div class="prompt-card">
+    <div class="prompt-card-header">
+      <div class="prompt-label">
+        <div class="prompt-num gold">2</div>
+        <div class="prompt-title">Storyline Builder <small>— use after Prompt 1, or standalone</small></div>
+      </div>
+      <button class="copy-btn" onclick="copyPrompt('p2', this)">Copy</button>
+    </div>
+    <div class="prompt-body" id="p2"><span class="c"># ━━━ ADD-ON: STORY ENGINE ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="c"># Use this after the Hook Analyzer above, OR paste standalone</span>
+<span class="c"># with your hook/niche details to build narrative-driven video scripts.</span>
+
+Now take the top-performing hook variant(s) from the analysis (or the hook I give you below) and build a FULL SHORT-FORM VIDEO STORYLINE around it.
+
+<span class="c"># ━━━ STORY FRAMEWORK ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+Structure the story using the <span class="h">3-ACT SCROLL FORMAT</span>:
+
+<span class="h">ACT 1 — THE HOOK (0–3 sec)</span>
+The scroll-stopper. Pattern interrupt. Make them need to know what comes next.
+Write the exact opening line or visual.
+
+<span class="h">ACT 2 — THE PULL (3–30 sec)</span>
+The story that builds tension, curiosity, or relatability. This is where you:
+- Establish the "before" state or the problem
+- Introduce yourself or a character the viewer can see themselves in
+- Drop a twist, reveal, or escalating detail that keeps them watching
+- Layer in social proof or credibility naturally (NOT as a brag)
+
+<span class="h">ACT 3 — THE PAYOFF + CTA (last 5–10 sec)</span>
+Deliver on the promise of the hook. Then bridge to the offer.
+The CTA should feel like the next logical step — not a sales pitch.
+
+<span class="c"># ━━━ OUTPUT FORMAT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="s">Give me the story in two ways:</span>
+
+<span class="h">VERSION A — SPOKEN SCRIPT</span>
+Write it as word-for-word dialogue I can say to camera.
+Keep it conversational. No fluff. Target: 30–45 seconds when spoken aloud.
+[Mark pauses with — and emphasis with CAPS]
+
+<span class="h">VERSION B — VISUAL STORYBOARD</span>
+Break it into scenes with:
+- What I'm doing / showing on screen
+- What text overlay or caption appears (if any)
+- Approximate seconds for each scene
+
+<span class="c"># ━━━ STORY ANGLES ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+<span class="s">Also suggest which 2 of these story angles fits this hook best and why:</span>
+
+[ ] <span class="h">The Accidental Discovery</span> — "I wasn't even looking for this when I found it..."
+[ ] <span class="h">The Underdog Win</span> — Started with nothing, small result, now scaling
+[ ] <span class="h">The Myth Bust</span> — Everyone told me X was the way, but actually Y works better
+[ ] <span class="h">The Day In The Life</span> — Show lifestyle proximity, not the pitch
+[ ] <span class="h">The Specific Number</span> — Lead with a concrete result, story fills in the how
+[ ] <span class="h">The Warning</span> — "If you're doing X, stop — you need to see this first"
+[ ] <span class="h">The Comparison</span> — "I tried 6 methods. Here's the only one that actually worked."
+[ ] <span class="h">The Transformation Bridge</span> — Before state → turning point → after state
+
+<span class="c"># ━━━ INPUT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</span>
+Hook to build from: [PASTE YOUR CHOSEN HOOK HERE]
+My offer / affiliate product: [DESCRIBE]
+My audience: [DESCRIBE]
+Video length target: [15 sec / 30 sec / 60 sec]
+My comfort on camera: [Beginner / Comfortable / Very comfortable]</div>
+  </div>
+
+  <div class="tips">
+    <div class="tip">
+      <div class="tip-icon">🎥</div>
+      <div class="tip-title">Best AI to use with</div>
+      <div class="tip-text">Claude (upload video directly) or ChatGPT-4o. For links only, use Gemini 1.5 Pro — it reads TikTok & YouTube URLs natively.</div>
+    </div>
+    <div class="tip">
+      <div class="tip-icon">🔁</div>
+      <div class="tip-title">Power move</div>
+      <div class="tip-text">Run Prompt 1 on 3–5 top videos in your niche. Stack the best hooks. Then run Prompt 2 on each — instant content calendar.</div>
+    </div>
+    <div class="tip">
+      <div class="tip-icon">💡</div>
+      <div class="tip-title">Fill in the inputs</div>
+      <div class="tip-text">The fields at the bottom of each prompt matter. The more specific you are about your offer and audience, the sharper the output.</div>
+    </div>
+    <div class="tip">
+      <div class="tip-icon">⚡</div>
+      <div class="tip-title">Stack them</div>
+      <div class="tip-text">Run Prompt 1 first, copy the top hook variant, then paste it into Prompt 2 in the same chat. No setup needed — just keep going.</div>
+    </div>
+  </div>
+
+  <div class="footer">Built for the <span>Glitchy</span> community · glitchy.com</div>
+
+</div>
+<script>
+function copyPrompt(id, btn) {
+  const el = document.getElementById(id);
+  const text = el.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✓ Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2200);
+  });
+}
+</script>
+</body>
+</html>
